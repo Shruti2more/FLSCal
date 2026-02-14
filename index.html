@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Incentive Calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #d71920;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #b5161c;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Incentive Calculator</h2>
+
+    <input type="number" id="disbursal" placeholder="Total Disbursal Value (₹)">
+    <input type="number" id="files" placeholder="Number of Fresh Files">
+    <input type="number" id="achievement" placeholder="% Target Achievement">
+    <input type="number" id="yield" placeholder="Average Yield %">
+    <input type="number" id="npa" placeholder="Number of NPA Cases">
+
+    <button onclick="calculate()">Calculate Incentive</button>
+
+    <div class="result" id="output"></div>
+</div>
+
+<script>
+function calculate() {
+
+    let disbursal = Number(document.getElementById("disbursal").value);
+    let files = Number(document.getElementById("files").value);
+    let achievement = Number(document.getElementById("achievement").value);
+    let yieldPercent = Number(document.getElementById("yield").value);
+    let npa = Number(document.getElementById("npa").value);
+
+    let slabPercent = 0;
+
+    // Step 1: Achievement check
+    if (achievement < 75) {
+        document.getElementById("output").innerHTML =
+            "<b>No incentive (Achievement below 75%)</b>";
+        return;
+    }
+
+    // Step 2: Determine slab %
+    function getSlab(files, highBand) {
+        if (files == 1) return highBand ? 0.003 : 0.002;
+        if (files == 2) return highBand ? 0.004 : 0.003;
+        if (files == 3) return highBand ? 0.005 : 0.004;
+        if (files >= 4 && files <= 5) return highBand ? 0.006 : 0.005;
+        if (files >= 6 && files <= 7) return highBand ? 0.007 : 0.006;
+        if (files >= 8) return highBand ? 0.008 : 0.007;
+        return 0;
+    }
+
+    let highBand = achievement >= 100;
+    slabPercent = getSlab(files, highBand);
+
+    let base = disbursal * slabPercent;
+
+    // Step 3: Booster
+    let boosterPercent = 0;
+    if (yieldPercent >= 14 && yieldPercent <= 15) boosterPercent = 0.10;
+    else if (yieldPercent > 15 && yieldPercent <= 16) boosterPercent = 0.15;
+    else if (yieldPercent > 16) boosterPercent = 0.20;
+
+    let booster = base * boosterPercent;
+
+    let totalBeforeDeduction = base + booster;
+
+    // Step 4: NPA Deduction
+    let deductionPercent = 0;
+    if (npa == 1) deductionPercent = 0.05;
+    else if (npa > 1) deductionPercent = 0.10;
+
+    let finalIncentive = totalBeforeDeduction * (1 - deductionPercent);
+
+    // Display
+    document.getElementById("output").innerHTML =
+        "<b>Base Incentive:</b> ₹" + base.toFixed(2) + "<br>" +
+        "<b>Booster:</b> ₹" + booster.toFixed(2) + "<br>" +
+        "<b>NPA Deduction:</b> -" + (deductionPercent*100) + "%<br><br>" +
+        "<b style='font-size:18px;'>Final Incentive: ₹" +
+        finalIncentive.toFixed(2) + "</b>";
+}
+</script>
+
+</body>
+</html>
