@@ -119,12 +119,12 @@ button {
 <div class="row">
 <div>
 <label>Amount Disbursed This Month (₹)</label>
-<input type="number" id="disbursed" min="0">
+<input type="text" id="disbursed" oninput="formatIndianCurrency(this)">
 </div>
 
 <div>
 <label>Target Assigned For The Month (₹)</label>
-<input type="number" id="target" min="0">
+<input type="text" id="target" oninput="formatIndianCurrency(this)">
 </div>
 
 <div>
@@ -165,57 +165,29 @@ button {
 
 <script>
 
+// Format input in Indian currency style while typing
+function formatIndianCurrency(input) {
+    let value = input.value.replace(/,/g, '').replace(/[^\d]/g, '');
+    if (value === "") {
+        input.value = "";
+        return;
+    }
+    input.value = Number(value).toLocaleString("en-IN");
+}
+
+// Remove commas before calculation
+function parseCurrency(value) {
+    return parseFloat(value.replace(/,/g, ''));
+}
+
 function formatCurrency(num) {
     return "₹" + Number(num).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function calculateAchievement(disbursed, target) {
-    return disbursed / target;
-}
-
-function calculateBase(disbursed, achievement, freshFiles) {
-    if (achievement < 0.75 || freshFiles === 0) return 0;
-
-    let multiplier = 0;
-
-    if (achievement >= 0.75 && achievement < 1.0) {
-        if (freshFiles === 1) multiplier = 0.002;
-        else if (freshFiles === 2) multiplier = 0.003;
-        else if (freshFiles === 3) multiplier = 0.004;
-        else if (freshFiles >= 4 && freshFiles <= 5) multiplier = 0.005;
-        else if (freshFiles >= 6 && freshFiles <= 7) multiplier = 0.006;
-        else if (freshFiles >= 8) multiplier = 0.007;
-    }
-
-    if (achievement >= 1.0) {
-        if (freshFiles === 1) multiplier = 0.003;
-        else if (freshFiles === 2) multiplier = 0.004;
-        else if (freshFiles === 3) multiplier = 0.005;
-        else if (freshFiles >= 4 && freshFiles <= 5) multiplier = 0.006;
-        else if (freshFiles >= 6 && freshFiles <= 7) multiplier = 0.007;
-        else if (freshFiles >= 8) multiplier = 0.008;
-    }
-
-    return disbursed * multiplier;
-}
-
-function calculateYieldBonus(base, yieldPercent) {
-    if (yieldPercent >= 14 && yieldPercent <= 15) return base * 0.10;
-    if (yieldPercent > 15 && yieldPercent <= 16) return base * 0.15;
-    if (yieldPercent > 16) return base * 0.20;
-    return 0;
-}
-
-function calculateNegative(base, npa) {
-    if (npa === 1) return base * 0.05;
-    if (npa > 1) return base * 0.10;
-    return 0;
-}
-
 function calculateTotal() {
 
-    const disbursed = parseFloat(document.getElementById("disbursed").value);
-    const target = parseFloat(document.getElementById("target").value);
+    const disbursed = parseCurrency(document.getElementById("disbursed").value);
+    const target = parseCurrency(document.getElementById("target").value);
     const freshFiles = parseInt(document.getElementById("freshFiles").value);
     const npa = parseInt(document.getElementById("npa").value);
     const yieldPercent = parseFloat(document.getElementById("yield").value);
@@ -241,7 +213,7 @@ function calculateTotal() {
         return;
     }
 
-    const achievement = calculateAchievement(disbursed, target);
+    const achievement = disbursed / target;
     const achievementPercent = (achievement * 100).toFixed(2);
 
     let achievementClass = "success-red";
@@ -260,9 +232,36 @@ function calculateTotal() {
         return;
     }
 
-    const base = calculateBase(disbursed, achievement, freshFiles);
-    const additional = calculateYieldBonus(base, yieldPercent);
-    const negative = calculateNegative(base, npa);
+    let multiplier = 0;
+
+    if (achievement >= 0.75 && achievement < 1.0) {
+        if (freshFiles === 1) multiplier = 0.002;
+        else if (freshFiles === 2) multiplier = 0.003;
+        else if (freshFiles === 3) multiplier = 0.004;
+        else if (freshFiles >= 4 && freshFiles <= 5) multiplier = 0.005;
+        else if (freshFiles >= 6 && freshFiles <= 7) multiplier = 0.006;
+        else if (freshFiles >= 8) multiplier = 0.007;
+    }
+
+    if (achievement >= 1.0) {
+        if (freshFiles === 1) multiplier = 0.003;
+        else if (freshFiles === 2) multiplier = 0.004;
+        else if (freshFiles === 3) multiplier = 0.005;
+        else if (freshFiles >= 4 && freshFiles <= 5) multiplier = 0.006;
+        else if (freshFiles >= 6 && freshFiles <= 7) multiplier = 0.007;
+        else if (freshFiles >= 8) multiplier = 0.008;
+    }
+
+    const base = disbursed * multiplier;
+
+    let additional = 0;
+    if (yieldPercent >= 14 && yieldPercent <= 15) additional = base * 0.10;
+    else if (yieldPercent > 15 && yieldPercent <= 16) additional = base * 0.15;
+    else if (yieldPercent > 16) additional = base * 0.20;
+
+    let negative = 0;
+    if (npa === 1) negative = base * 0.05;
+    else if (npa > 1) negative = base * 0.10;
 
     let total = base + additional - negative;
     if (total < 0) total = 0;
