@@ -9,7 +9,7 @@
 :root {
     --primary-red: #c00000;
     --light-red: #ffe6e6;
-    --green: #008000;
+    --green: #1e7e34;
     --orange: #ff8c00;
     --gray-bg: #f5f5f5;
 }
@@ -21,7 +21,7 @@ body {
 }
 
 .container {
-    max-width: 1000px;
+    max-width: 900px;
     margin: 40px auto;
     padding: 20px;
 }
@@ -75,8 +75,8 @@ input:focus {
 .success-green { color: var(--green); font-weight: bold; }
 
 .result-item {
-    margin-bottom: 10px;
-    font-size: 16px;
+    margin-bottom: 12px;
+    font-size: 17px;
 }
 
 .total {
@@ -93,15 +93,17 @@ button {
     border: none;
     cursor: pointer;
     font-weight: bold;
+    margin-right: 10px;
+}
+
+.calculate-btn {
+    background: var(--green);
+    color: white;
 }
 
 .reset-btn {
     background: var(--primary-red);
     color: white;
-}
-
-@media(max-width:600px){
-    .container { padding: 10px; }
 }
 </style>
 </head>
@@ -143,39 +145,36 @@ button {
 
 <div class="error" id="errorMsg"></div>
 
+<button class="calculate-btn" onclick="calculateTotal()">Calculate</button>
 <button class="reset-btn" onclick="resetForm()">Reset</button>
 </div>
 
 <div class="card">
-<h2>Incentive Breakdown</h2>
+<h2>Incentive Results</h2>
 
 <div class="result-item">Achievement: <span id="achievement"></span></div>
-<div class="result-item">Slab Category: <span id="slabCategory"></span></div>
-<div class="result-item">Multiplier Applied: <span id="multiplier"></span></div>
 <div class="result-item">Base Incentive: <span id="base"></span></div>
 <div class="result-item">Additional Incentive: <span id="additional"></span></div>
 <div class="result-item">Negative Incentive: <span id="negative"></span></div>
 <div class="total">Final Total Incentive: <span id="total"></span></div>
 
-<div class="result-item" id="noIncentiveMsg"></div>
+<div id="noIncentiveMsg"></div>
 
 </div>
 </div>
 
 <script>
-const inputs = document.querySelectorAll("input");
-inputs.forEach(input => input.addEventListener("input", calculateTotal));
 
 function formatCurrency(num) {
-    return "₹" + num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return "₹" + Number(num).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function calculateAchievement(disbursed, target) {
     return disbursed / target;
 }
 
-function calculateBaseIncentive(disbursed, achievement, freshFiles) {
-    if (achievement < 0.75 || freshFiles === 0) return { base: 0, multiplier: 0, slab: "Not Eligible" };
+function calculateBase(disbursed, achievement, freshFiles) {
+    if (achievement < 0.75 || freshFiles === 0) return 0;
 
     let multiplier = 0;
 
@@ -186,7 +185,6 @@ function calculateBaseIncentive(disbursed, achievement, freshFiles) {
         else if (freshFiles >= 4 && freshFiles <= 5) multiplier = 0.005;
         else if (freshFiles >= 6 && freshFiles <= 7) multiplier = 0.006;
         else if (freshFiles >= 8) multiplier = 0.007;
-        return { base: disbursed * multiplier, multiplier, slab: "75% – <100%" };
     }
 
     if (achievement >= 1.0) {
@@ -196,21 +194,19 @@ function calculateBaseIncentive(disbursed, achievement, freshFiles) {
         else if (freshFiles >= 4 && freshFiles <= 5) multiplier = 0.006;
         else if (freshFiles >= 6 && freshFiles <= 7) multiplier = 0.007;
         else if (freshFiles >= 8) multiplier = 0.008;
-        return { base: disbursed * multiplier, multiplier, slab: "100% and above" };
     }
 
-    return { base: 0, multiplier: 0, slab: "Not Eligible" };
+    return disbursed * multiplier;
 }
 
 function calculateYieldBonus(base, yieldPercent) {
-    let percent = 0;
-    if (yieldPercent >= 14 && yieldPercent <= 15) percent = 0.10;
-    else if (yieldPercent > 15 && yieldPercent <= 16) percent = 0.15;
-    else if (yieldPercent > 16) percent = 0.20;
-    return base * percent;
+    if (yieldPercent >= 14 && yieldPercent <= 15) return base * 0.10;
+    if (yieldPercent > 15 && yieldPercent <= 16) return base * 0.15;
+    if (yieldPercent > 16) return base * 0.20;
+    return 0;
 }
 
-function calculateNegativeKicker(base, npa) {
+function calculateNegative(base, npa) {
     if (npa === 1) return base * 0.05;
     if (npa > 1) return base * 0.10;
     return 0;
@@ -223,6 +219,7 @@ function calculateTotal() {
     const freshFiles = parseInt(document.getElementById("freshFiles").value);
     const npa = parseInt(document.getElementById("npa").value);
     const yieldPercent = parseFloat(document.getElementById("yield").value);
+
     const errorMsg = document.getElementById("errorMsg");
     const noMsg = document.getElementById("noIncentiveMsg");
 
@@ -231,19 +228,16 @@ function calculateTotal() {
 
     if (!disbursed || !target || isNaN(freshFiles) || isNaN(npa) || isNaN(yieldPercent)) {
         errorMsg.textContent = "All fields are required.";
-        clearOutputs();
         return;
     }
 
     if (target <= 0) {
         errorMsg.textContent = "Target must be greater than zero.";
-        clearOutputs();
         return;
     }
 
     if (disbursed < 0 || freshFiles < 0 || npa < 0 || yieldPercent < 0) {
         errorMsg.textContent = "Negative values are not allowed.";
-        clearOutputs();
         return;
     }
 
@@ -259,42 +253,37 @@ function calculateTotal() {
 
     if (achievement < 0.75) {
         noMsg.innerHTML = `<span class="success-red">Sorry, no incentive earned this month.</span>`;
-        clearOutputs(true);
+        document.getElementById("base").textContent = "₹0.00";
+        document.getElementById("additional").textContent = "₹0.00";
+        document.getElementById("negative").textContent = "₹0.00";
+        document.getElementById("total").textContent = "₹0.00";
         return;
     }
 
-    const baseData = calculateBaseIncentive(disbursed, achievement, freshFiles);
-    const base = baseData.base;
+    const base = calculateBase(disbursed, achievement, freshFiles);
     const additional = calculateYieldBonus(base, yieldPercent);
-    const negative = calculateNegativeKicker(base, npa);
-    let total = base + additional - negative;
+    const negative = calculateNegative(base, npa);
 
+    let total = base + additional - negative;
     if (total < 0) total = 0;
 
-    document.getElementById("slabCategory").textContent = baseData.slab;
-    document.getElementById("multiplier").textContent = (baseData.multiplier * 100).toFixed(2) + "%";
     document.getElementById("base").textContent = formatCurrency(base.toFixed(2));
     document.getElementById("additional").textContent = formatCurrency(additional.toFixed(2));
     document.getElementById("negative").textContent = formatCurrency(negative.toFixed(2));
     document.getElementById("total").textContent = formatCurrency(total.toFixed(2));
 }
 
-function clearOutputs(keepAchievement=false) {
-    if (!keepAchievement) document.getElementById("achievement").textContent = "";
-    document.getElementById("slabCategory").textContent = "";
-    document.getElementById("multiplier").textContent = "";
+function resetForm() {
+    document.querySelectorAll("input").forEach(i => i.value = "");
+    document.getElementById("errorMsg").textContent = "";
+    document.getElementById("noIncentiveMsg").textContent = "";
+    document.getElementById("achievement").textContent = "";
     document.getElementById("base").textContent = "";
     document.getElementById("additional").textContent = "";
     document.getElementById("negative").textContent = "";
     document.getElementById("total").textContent = "";
 }
 
-function resetForm() {
-    document.querySelectorAll("input").forEach(i => i.value = "");
-    document.getElementById("errorMsg").textContent = "";
-    document.getElementById("noIncentiveMsg").textContent = "";
-    clearOutputs();
-}
 </script>
 
 </body>
