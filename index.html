@@ -1,116 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Incentive Calculator for FLS (ABCL RSB)</title>
 
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #f4f6f9;
-        margin: 0;
-        padding: 20px;
-    }
+:root {
+    --primary-red: #c00000;
+    --light-red: #ffe6e6;
+    --green: #008000;
+    --orange: #ff8c00;
+    --gray-bg: #f5f5f5;
+}
 
-    .container {
-        max-width: 900px;
-        margin: auto;
-    }
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: var(--gray-bg);
+}
 
-    .card {
-        background: #ffffff;
-        padding: 25px;
-        border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        margin-bottom: 20px;
-    }
+.container {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 20px;
+}
 
-    h1 {
-        text-align: center;
-        color: #b00020;
-        margin-bottom: 25px;
-    }
+.card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    padding: 25px;
+    margin-bottom: 25px;
+}
 
-    .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 15px;
-    }
+h1 {
+    text-align: center;
+    color: var(--primary-red);
+}
 
-    label {
-        font-weight: bold;
-        font-size: 14px;
-        margin-bottom: 5px;
-        display: block;
-    }
+h2 {
+    color: var(--primary-red);
+}
 
-    input {
-        width: 100%;
-        padding: 8px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-    }
+input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
 
-    input:focus {
-        outline: none;
-        border-color: #b00020;
-    }
+input:focus {
+    border-color: var(--primary-red);
+    outline: none;
+}
 
-    .error {
-        color: #b00020;
-        font-size: 13px;
-        margin-top: 5px;
-    }
+.row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
 
-    .result-item {
-        margin-bottom: 10px;
-        font-size: 15px;
-    }
+.error {
+    color: red;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
 
-    .highlight {
-        font-weight: bold;
-        font-size: 18px;
-        color: #b00020;
-    }
+.success-red { color: red; font-weight: bold; }
+.success-orange { color: var(--orange); font-weight: bold; }
+.success-green { color: var(--green); font-weight: bold; }
 
-    .achievement-red { color: #b00020; }
-    .achievement-orange { color: #ff9800; }
-    .achievement-green { color: #2e7d32; }
+.result-item {
+    margin-bottom: 10px;
+    font-size: 16px;
+}
 
-    button {
-        padding: 10px 15px;
-        background: #b00020;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        margin-top: 10px;
-    }
+.total {
+    font-size: 22px;
+    font-weight: bold;
+    background: var(--light-red);
+    padding: 10px;
+    border-radius: 6px;
+}
 
-    button:hover {
-        opacity: 0.9;
-    }
+button {
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
 
+.reset-btn {
+    background: var(--primary-red);
+    color: white;
+}
+
+@media(max-width:600px){
+    .container { padding: 10px; }
+}
 </style>
 </head>
 
 <body>
-<div class="container">
 
+<div class="container">
 <h1>Incentive Calculator for FLS (ABCL RSB)</h1>
 
 <div class="card">
-<div class="grid">
+<h2>Input Details</h2>
 
+<div class="row">
 <div>
 <label>Amount Disbursed This Month (₹)</label>
-<input type="number" id="disbursed" min="0" step="0.01">
+<input type="number" id="disbursed" min="0">
 </div>
 
 <div>
 <label>Target Assigned For The Month (₹)</label>
-<input type="number" id="target" min="0" step="0.01">
+<input type="number" id="target" min="0">
 </div>
 
 <div>
@@ -127,179 +139,162 @@
 <label>Average Yield (%)</label>
 <input type="number" id="yield" min="0" step="0.01">
 </div>
-
 </div>
 
-<div class="error" id="errorMessage"></div>
-<button onclick="resetForm()">Reset</button>
+<div class="error" id="errorMsg"></div>
+
+<button class="reset-btn" onclick="resetForm()">Reset</button>
 </div>
 
 <div class="card">
-<h3>Results</h3>
+<h2>Incentive Breakdown</h2>
 
-<div class="result-item">Achievement %: <span id="achievement"></span></div>
-<div class="result-item">Slab Category: <span id="slab"></span></div>
+<div class="result-item">Achievement: <span id="achievement"></span></div>
+<div class="result-item">Slab Category: <span id="slabCategory"></span></div>
 <div class="result-item">Multiplier Applied: <span id="multiplier"></span></div>
 <div class="result-item">Base Incentive: <span id="base"></span></div>
 <div class="result-item">Additional Incentive: <span id="additional"></span></div>
 <div class="result-item">Negative Incentive: <span id="negative"></span></div>
-<div class="result-item highlight">Final Total Incentive: <span id="total"></span></div>
+<div class="total">Final Total Incentive: <span id="total"></span></div>
+
+<div class="result-item" id="noIncentiveMsg"></div>
 
 </div>
 </div>
 
 <script>
+const inputs = document.querySelectorAll("input");
+inputs.forEach(input => input.addEventListener("input", calculateTotal));
 
-/* Utility: Currency Formatter */
-function formatCurrency(value) {
-    return "₹ " + Number(value).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function formatCurrency(num) {
+    return "₹" + num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-/* Validation */
-function validateInputs(disbursed, target, freshFiles, npa, yieldVal) {
-    if (
-        disbursed === "" || target === "" ||
-        freshFiles === "" || npa === "" || yieldVal === ""
-    ) return "All fields are required.";
-
-    if (disbursed < 0 || target <= 0 || freshFiles < 0 || npa < 0 || yieldVal < 0)
-        return "Values must be positive. Target cannot be zero.";
-
-    return "";
-}
-
-/* Achievement Calculation */
 function calculateAchievement(disbursed, target) {
-    const achievement = disbursed / target;
-    const percent = achievement * 100;
-    return { achievement, percent };
+    return disbursed / target;
 }
 
-/* Base Incentive Calculation */
-function calculateBaseIncentive(achievement, disbursed, freshFiles) {
-
-    if (achievement < 0.75 || freshFiles === 0) {
-        return { multiplier: 0, slab: "Not Eligible", base: 0 };
-    }
+function calculateBaseIncentive(disbursed, achievement, freshFiles) {
+    if (achievement < 0.75 || freshFiles === 0) return { base: 0, multiplier: 0, slab: "Not Eligible" };
 
     let multiplier = 0;
-    let slab = "";
 
-    const getMultiplier = (lowAch, highAch, slabName, mapping) => {
-        slab = slabName;
-        if (freshFiles === 1) multiplier = mapping[1];
-        else if (freshFiles === 2) multiplier = mapping[2];
-        else if (freshFiles === 3) multiplier = mapping[3];
-        else if (freshFiles >= 4 && freshFiles <= 5) multiplier = mapping[4];
-        else if (freshFiles >= 6 && freshFiles <= 7) multiplier = mapping[6];
-        else if (freshFiles >= 8) multiplier = mapping[8];
-    };
-
-    if (achievement >= 0.75 && achievement < 1.00) {
-        getMultiplier(0.75, 1.00, "75%–99.99%", {
-            1:0.2,2:0.3,3:0.4,4:0.5,6:0.6,8:0.7
-        });
-    } else if (achievement >= 1.00) {
-        getMultiplier(1.00, Infinity, "100% and Above", {
-            1:0.3,2:0.4,3:0.5,4:0.6,6:0.7,8:0.8
-        });
+    if (achievement >= 0.75 && achievement < 1.0) {
+        if (freshFiles === 1) multiplier = 0.002;
+        else if (freshFiles === 2) multiplier = 0.003;
+        else if (freshFiles === 3) multiplier = 0.004;
+        else if (freshFiles >= 4 && freshFiles <= 5) multiplier = 0.005;
+        else if (freshFiles >= 6 && freshFiles <= 7) multiplier = 0.006;
+        else if (freshFiles >= 8) multiplier = 0.007;
+        return { base: disbursed * multiplier, multiplier, slab: "75% – <100%" };
     }
 
-    const base = multiplier * disbursed;
+    if (achievement >= 1.0) {
+        if (freshFiles === 1) multiplier = 0.003;
+        else if (freshFiles === 2) multiplier = 0.004;
+        else if (freshFiles === 3) multiplier = 0.005;
+        else if (freshFiles >= 4 && freshFiles <= 5) multiplier = 0.006;
+        else if (freshFiles >= 6 && freshFiles <= 7) multiplier = 0.007;
+        else if (freshFiles >= 8) multiplier = 0.008;
+        return { base: disbursed * multiplier, multiplier, slab: "100% and above" };
+    }
 
-    return { multiplier, slab, base };
+    return { base: 0, multiplier: 0, slab: "Not Eligible" };
 }
 
-/* Yield Bonus */
-function calculateYieldBonus(base, yieldVal) {
-
+function calculateYieldBonus(base, yieldPercent) {
     let percent = 0;
-
-    if (yieldVal >= 14 && yieldVal <= 15) percent = 0.10;
-    else if (yieldVal > 15 && yieldVal <= 16) percent = 0.15;
-    else if (yieldVal > 16) percent = 0.20;
-
+    if (yieldPercent >= 14 && yieldPercent <= 15) percent = 0.10;
+    else if (yieldPercent > 15 && yieldPercent <= 16) percent = 0.15;
+    else if (yieldPercent > 16) percent = 0.20;
     return base * percent;
 }
 
-/* Negative Incentive */
 function calculateNegativeKicker(base, npa) {
-
-    let percent = 0;
-
-    if (npa === 1) percent = 0.05;
-    else if (npa > 1) percent = 0.10;
-
-    return base * percent;
+    if (npa === 1) return base * 0.05;
+    if (npa > 1) return base * 0.10;
+    return 0;
 }
 
-/* Final Total */
-function calculateTotal(base, additional, negative) {
-    let total = base + additional - negative;
-    if (total < 0) total = 0;
-    return total;
-}
-
-/* Main Engine */
-function runCalculation() {
+function calculateTotal() {
 
     const disbursed = parseFloat(document.getElementById("disbursed").value);
     const target = parseFloat(document.getElementById("target").value);
     const freshFiles = parseInt(document.getElementById("freshFiles").value);
     const npa = parseInt(document.getElementById("npa").value);
-    const yieldVal = parseFloat(document.getElementById("yield").value);
+    const yieldPercent = parseFloat(document.getElementById("yield").value);
+    const errorMsg = document.getElementById("errorMsg");
+    const noMsg = document.getElementById("noIncentiveMsg");
 
-    const error = validateInputs(disbursed, target, freshFiles, npa, yieldVal);
-    document.getElementById("errorMessage").innerText = error;
+    errorMsg.textContent = "";
+    noMsg.textContent = "";
 
-    if (error) return;
-
-    const { achievement, percent } = calculateAchievement(disbursed, target);
-
-    if (achievement < 0.75) {
-        document.getElementById("achievement").innerHTML = `<span class="achievement-red">${percent.toFixed(2)}%</span>`;
-        document.getElementById("slab").innerText = "Not Eligible";
-        document.getElementById("multiplier").innerText = "0";
-        document.getElementById("base").innerText = formatCurrency(0);
-        document.getElementById("additional").innerText = formatCurrency(0);
-        document.getElementById("negative").innerText = formatCurrency(0);
-        document.getElementById("total").innerText = formatCurrency(0);
+    if (!disbursed || !target || isNaN(freshFiles) || isNaN(npa) || isNaN(yieldPercent)) {
+        errorMsg.textContent = "All fields are required.";
+        clearOutputs();
         return;
     }
 
-    const baseData = calculateBaseIncentive(achievement, disbursed, freshFiles);
-    const additional = calculateYieldBonus(baseData.base, yieldVal);
-    const negative = calculateNegativeKicker(baseData.base, npa);
-    const total = calculateTotal(baseData.base, additional, negative);
+    if (target <= 0) {
+        errorMsg.textContent = "Target must be greater than zero.";
+        clearOutputs();
+        return;
+    }
 
-    let achievementClass = "achievement-orange";
-    if (achievement < 0.75) achievementClass = "achievement-red";
-    else if (achievement >= 1.00) achievementClass = "achievement-green";
+    if (disbursed < 0 || freshFiles < 0 || npa < 0 || yieldPercent < 0) {
+        errorMsg.textContent = "Negative values are not allowed.";
+        clearOutputs();
+        return;
+    }
+
+    const achievement = calculateAchievement(disbursed, target);
+    const achievementPercent = (achievement * 100).toFixed(2);
+
+    let achievementClass = "success-red";
+    if (achievement >= 1) achievementClass = "success-green";
+    else if (achievement >= 0.75) achievementClass = "success-orange";
 
     document.getElementById("achievement").innerHTML =
-        `<span class="${achievementClass}">${percent.toFixed(2)}%</span>`;
+        `<span class="${achievementClass}">${achievementPercent}%</span>`;
 
-    document.getElementById("slab").innerText = baseData.slab;
-    document.getElementById("multiplier").innerText = baseData.multiplier.toFixed(2);
-    document.getElementById("base").innerText = formatCurrency(baseData.base);
-    document.getElementById("additional").innerText = formatCurrency(additional);
-    document.getElementById("negative").innerText = formatCurrency(negative);
-    document.getElementById("total").innerText = formatCurrency(total);
+    if (achievement < 0.75) {
+        noMsg.innerHTML = `<span class="success-red">Sorry, no incentive earned this month.</span>`;
+        clearOutputs(true);
+        return;
+    }
+
+    const baseData = calculateBaseIncentive(disbursed, achievement, freshFiles);
+    const base = baseData.base;
+    const additional = calculateYieldBonus(base, yieldPercent);
+    const negative = calculateNegativeKicker(base, npa);
+    let total = base + additional - negative;
+
+    if (total < 0) total = 0;
+
+    document.getElementById("slabCategory").textContent = baseData.slab;
+    document.getElementById("multiplier").textContent = (baseData.multiplier * 100).toFixed(2) + "%";
+    document.getElementById("base").textContent = formatCurrency(base.toFixed(2));
+    document.getElementById("additional").textContent = formatCurrency(additional.toFixed(2));
+    document.getElementById("negative").textContent = formatCurrency(negative.toFixed(2));
+    document.getElementById("total").textContent = formatCurrency(total.toFixed(2));
 }
 
-/* Reset */
+function clearOutputs(keepAchievement=false) {
+    if (!keepAchievement) document.getElementById("achievement").textContent = "";
+    document.getElementById("slabCategory").textContent = "";
+    document.getElementById("multiplier").textContent = "";
+    document.getElementById("base").textContent = "";
+    document.getElementById("additional").textContent = "";
+    document.getElementById("negative").textContent = "";
+    document.getElementById("total").textContent = "";
+}
+
 function resetForm() {
     document.querySelectorAll("input").forEach(i => i.value = "");
-    document.querySelectorAll("#achievement, #slab, #multiplier, #base, #additional, #negative, #total")
-        .forEach(el => el.innerText = "");
-    document.getElementById("errorMessage").innerText = "";
+    document.getElementById("errorMsg").textContent = "";
+    document.getElementById("noIncentiveMsg").textContent = "";
+    clearOutputs();
 }
-
-/* Real-time calculation */
-document.querySelectorAll("input").forEach(input => {
-    input.addEventListener("input", runCalculation);
-});
-
 </script>
 
 </body>
